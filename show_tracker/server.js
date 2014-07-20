@@ -1,5 +1,13 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcryptjs');
+var express = require('express');
+var path = require('path');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+
+var app = express();
+
 var showSchema = new mongoose.Schema({
   _id: Number,
   name: String,
@@ -24,13 +32,31 @@ var showSchema = new mongoose.Schema({
       overview: String
   }]
 });
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+var userSchema = new mongoose.Schema({
+  email: { type: String, unique: true },
+  password: String
+});
 
-var app = express();
+userSchema.pre('save', function(next) {
+  var user = this;
+  if (!user.isModified('password')) return next();
+  bcrypt.genSalt(10, function(err, salt) {
+    if (err) return next(err);
+    bcrypt.hash(user.password, salt, function(err, hash) {
+      if (err) return next(err);
+      user.password = hash;
+      next();
+    });
+  });
+});
+
+userSchema.methods.comparePassword = function(candidatePassword, cb) {
+  bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
+    if (err) return cb(err);
+    cb(null, isMatch);
+  });
+};
+
 
 app.set('port', process.env.PORT || 3000);
 app.use(logger('dev'));
