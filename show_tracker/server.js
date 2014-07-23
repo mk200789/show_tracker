@@ -104,3 +104,11 @@ app.get('/api/shows/:id', function(req, res, next) {
     res.send(show);
   });
 });
+
+app.post('/api/shows', function(req, res, next){
+  var apiKey = '9EF1D1E7D28FDA0B';
+  var parser = xml2js.Parser({
+    explicitArray: false,
+    normalizeTags: true
+  });
+})
